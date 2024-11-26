@@ -1,0 +1,43 @@
+Activity_main.ml code:
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmIns:android="http://schemas.android.com/apk/res/android"
+xmIns:app="http://schemas.android.com/apk/res-auto"
+xmIns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:background="@ color/black_shade" tools:context=".MainActivity">
+<Image View
+android:layout_width="200dp"
+android:layout_height="200dp"
+android:layout_centerHorizontal="true"
+android:src=" @drawable/img"
+android:layout_marginTop="70dp"
+android:id="@+id/idivlogo" />
+<Text View
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:layout_below="@+id/idivlogo"
+android:layout_marginEnd="20dp"
+android:layout_marginStart="20dp"
+android:layout_marginTop="30dp"
+android:layout_marginBottom="10dp"
+android:id="@id/idTvHead"
+android:text="Welcome to Text recognition app"
+android:textAlignment="center"
+android:gravity="center"
+android:layout_centerHorizontal="true"
+android:textColor=" @color/yellow"
+android:textSize="24dp"
+android:textStyle="bold"
+/>
+< B u t t o n android:id="@+id/idbtncap"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:layout_below="@+id/idTvHead"
+android:layout_marginStart="20dp"
+android:layout_marginTop="30dp"
+android:layout_marginEnd="20dp"
+android:background=" @ drawable/button_back"
+app:backgroundTint=" @color/yellow"
+android:text="Capture" android:textAllCaps="false"
+</RelativeLayout>
