@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Text Recognition</string>
+    <string name="welcome">Welcome to Text recognition app</string>
+    <string name="capture">Capture</string>
+    <string name="snap">Snap</string>
+    <string name="detect">Detect</string>
+    <string name="logo">App logo</string>
+    <string name="captured_image">Captured image</string>
+</resources>

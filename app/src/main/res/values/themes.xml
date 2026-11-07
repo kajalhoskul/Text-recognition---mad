@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.TextRecognition" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/yellow</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <item name="android:statusBarColor">@color/black_shade</item>
+    </style>
+</resources>
