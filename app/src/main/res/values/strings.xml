@@ -6,4 +6,12 @@
     <string name="detect">Detect</string>
     <string name="logo">App logo</string>
     <string name="captured_image">Captured image</string>
+    <string name="camera_permission_title">Camera access needed</string>
+    <string name="camera_permission_rationale">This app uses the camera to take a photo of the text you want to scan. Photos stay on your device.</string>
+    <string name="camera_permission_denied">Camera permission denied</string>
+    <string name="camera_permission_blocked">Camera access is turned off for this app. Open Settings and allow the Camera permission to take photos.</string>
+    <string name="allow">Allow</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="not_now">Not now</string>
+    <string name="no_camera_app">No camera app found</string>
 </resources>

@@ -9,6 +9,8 @@ recognition model is bundled into the app.
 1. **Home screen** – tap **Capture** to open the scanner.
 2. **Scanner screen**
    - **Snap** asks for camera permission (only the first time), then opens the camera.
+     If you said no before, it explains why the camera is needed and asks again; if
+     you chose "Don't ask again", it offers a shortcut to the app's Settings page.
    - **Detect** runs ML Kit text recognition on the photo and shows the text,
      which you can select and copy.
 

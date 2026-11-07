@@ -2,20 +2,22 @@ package com.example.textrecognition;
 
 import static android.Manifest.permission.CAMERA;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
+import android.provider.Settings;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.mlkit.vision.common.InputImage;
@@ -26,12 +28,19 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
 public class ScannerActivity extends AppCompatActivity {
 
-    private static final int REQUEST_IMAGE_CAPTURE = 1;
-    private static final int PERMISSION_CODE = 200;
-
     private ImageView captureIV;
     private TextView resultTV;
     private Bitmap imgBitmap;
+
+    // Asks the user for the CAMERA permission and reports the answer.
+    private final ActivityResultLauncher<String> cameraPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+                    this::onCameraPermissionResult);
+
+    // Opens the camera app and returns a preview-sized Bitmap (null if cancelled).
+    private final ActivityResultLauncher<Void> takePictureLauncher =
+            registerForActivityResult(new ActivityResultContracts.TakePicturePreview(),
+                    this::onPictureTaken);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,58 +53,78 @@ public class ScannerActivity extends AppCompatActivity {
         Button detectBtn = findViewById(R.id.idBtnDetect);
 
         detectBtn.setOnClickListener(v -> detectText());
-        snapBtn.setOnClickListener(v -> {
-            if (checkPermission()) {
-                captureImage();
-            } else {
-                requestPermission();
-            }
-        });
+        snapBtn.setOnClickListener(v -> requestCameraAndCapture());
     }
 
-    private boolean checkPermission() {
-        return ContextCompat.checkSelfPermission(getApplicationContext(), CAMERA)
+    // ---- Camera permission -------------------------------------------------
+
+    private void requestCameraAndCapture() {
+        if (hasCameraPermission()) {
+            captureImage();
+        } else if (shouldShowRequestPermissionRationale(CAMERA)) {
+            // The user said no before: explain why we need it, then ask again.
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.camera_permission_title)
+                    .setMessage(R.string.camera_permission_rationale)
+                    .setPositiveButton(R.string.allow,
+                            (d, w) -> cameraPermissionLauncher.launch(CAMERA))
+                    .setNegativeButton(R.string.not_now, null)
+                    .show();
+        } else {
+            cameraPermissionLauncher.launch(CAMERA);
+        }
+    }
+
+    private boolean hasCameraPermission() {
+        return ContextCompat.checkSelfPermission(this, CAMERA)
                 == PackageManager.PERMISSION_GRANTED;
     }
 
-    private void requestPermission() {
-        ActivityCompat.requestPermissions(this, new String[]{CAMERA}, PERMISSION_CODE);
+    private void onCameraPermissionResult(boolean granted) {
+        if (granted) {
+            captureImage();
+        } else if (!shouldShowRequestPermissionRationale(CAMERA)) {
+            // Denied with "Don't ask again" (or blocked by policy): the system
+            // dialog won't show any more, so the only way back is Settings.
+            showOpenSettingsDialog();
+        } else {
+            Toast.makeText(this, R.string.camera_permission_denied, Toast.LENGTH_SHORT).show();
+        }
     }
+
+    private void showOpenSettingsDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.camera_permission_title)
+                .setMessage(R.string.camera_permission_blocked)
+                .setPositiveButton(R.string.open_settings, (d, w) -> openAppSettings())
+                .setNegativeButton(R.string.not_now, null)
+                .show();
+    }
+
+    private void openAppSettings() {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.fromParts("package", getPackageName(), null));
+        startActivity(intent);
+    }
+
+    // ---- Capture -----------------------------------------------------------
 
     private void captureImage() {
-        Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePicture.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePicture, REQUEST_IMAGE_CAPTURE);
-        } else {
-            Toast.makeText(this, "No camera app found", Toast.LENGTH_SHORT).show();
+        try {
+            takePictureLauncher.launch(null);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, R.string.no_camera_app, Toast.LENGTH_SHORT).show();
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode != PERMISSION_CODE) return;
-        boolean granted = grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED;
-        if (granted) {
-            Toast.makeText(this, "Permission Granted...", Toast.LENGTH_SHORT).show();
-            captureImage();
-        } else {
-            Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
-        }
+    private void onPictureTaken(Bitmap bitmap) {
+        if (bitmap == null) return; // user backed out of the camera
+        imgBitmap = bitmap;
+        captureIV.setImageBitmap(imgBitmap);
+        resultTV.setText("");
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK
-                && data != null && data.getExtras() != null) {
-            imgBitmap = (Bitmap) data.getExtras().get("data");
-            captureIV.setImageBitmap(imgBitmap);
-            resultTV.setText("");
-        }
-    }
+    // ---- Text recognition --------------------------------------------------
 
     private void detectText() {
         if (imgBitmap == null) {
